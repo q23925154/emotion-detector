@@ -2,15 +2,15 @@ let model, webcam, labelContainer, maxPredictions;
 let intervalId;
 
 // Teachable Machine 預訓練模型網址
-const modelURL = "model/model.json";
-const metadataURL = "model/metadata.json";
+const modelURL = "https://teachablemachine.withgoogle.com/models/T3d1b6ztI/model.json";
+const metadataURL = "https://teachablemachine.withgoogle.com/models/T3d1b6ztI/metadata.json";
 
 // 預載模型
 async function init() {
   model = await tmImage.load(modelURL, metadataURL);
   maxPredictions = model.getTotalClasses();
 
-  webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+  webcam = new tmImage.Webcam(200, 200, true);
   await webcam.setup();
   await webcam.play();
   window.requestAnimationFrame(loop);
@@ -49,4 +49,3 @@ document.getElementById("stop-btn").addEventListener("click", () => {
   document.getElementById("label").innerText = "已停止";
   document.getElementById("confidence").innerText = "";
 });
-
