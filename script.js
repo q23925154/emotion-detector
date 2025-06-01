@@ -1,53 +1,52 @@
-body {
-  font-family: "Arial", sans-serif;
-  background: linear-gradient(135deg, #3a0ca3, #7209b7, #f72585);
-  color: #fff;
-  text-align: center;
-  margin: 0;
-  padding: 20px;
+let model, webcam, labelContainer, maxPredictions;
+let intervalId;
+
+// Teachable Machine 預訓練模型網址
+const modelURL = "model/model.json";
+const metadataURL = "model/metadata.json";
+
+// 預載模型
+async function init() {
+  model = await tmImage.load(modelURL, metadataURL);
+  maxPredictions = model.getTotalClasses();
+
+  webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+  await webcam.setup();
+  await webcam.play();
+  window.requestAnimationFrame(loop);
+
+  document.getElementById("webcam").appendChild(webcam.canvas);
 }
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+// 偵測主迴圈
+async function loop() {
+  webcam.update();
+  window.requestAnimationFrame(loop);
 }
 
-video {
-  width: 100%;
-  border-radius: 10px;
-  margin: 10px 0;
+// 辨識一次
+async function predict() {
+  const prediction = await model.predict(webcam.canvas);
+  prediction.sort((a, b) => b.probability - a.probability);
+
+  const best = prediction[0];
+  document.getElementById("label").innerText = best.className;
+  document.getElementById("confidence").innerText = `信心度：${(best.probability * 100).toFixed(2)}%`;
 }
 
-button {
-  background-color: #f72585;
-  border: none;
-  color: #fff;
-  padding: 10px 20px;
-  margin: 10px 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s;
-}
+// 開始辨識
+document.getElementById("start-btn").addEventListener("click", async () => {
+  if (!model) {
+    await init();
+  }
 
-button:hover {
-  background-color: #b5179e;
-}
+  intervalId = setInterval(predict, 1000);
+});
 
-#result {
-  margin-top: 20px;
-}
+// 停止辨識
+document.getElementById("stop-btn").addEventListener("click", () => {
+  clearInterval(intervalId);
+  document.getElementById("label").innerText = "已停止";
+  document.getElementById("confidence").innerText = "";
+});
 
-#label {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-#confidence {
-  font-size: 18px;
-  color: #ffd60a;
-}
